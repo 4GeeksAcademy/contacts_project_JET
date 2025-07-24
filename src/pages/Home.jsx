@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 
 
 export const Home = () => {
+  
+  
+  
   const { store } = useGlobalReducer();
 
   return (
