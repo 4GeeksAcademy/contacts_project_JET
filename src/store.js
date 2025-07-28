@@ -36,7 +36,7 @@ export default function storeReducer(store, action = {}) {
     case "DELETE_CONTACT":
       return {
         ...store,
-        contacts: store.contact.filter(
+        contacts: store.contacts.filter(
           (contact) => contact.id !== action.payload
         ),
       };

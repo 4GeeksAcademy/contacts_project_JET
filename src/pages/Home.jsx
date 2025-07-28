@@ -1,68 +1,69 @@
 import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import ContactsCard from "../components/ContactsCard.jsx";
-import { Link } from "react-router-dom";
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
+  const slug = "JET365";
 
-  // THIS IS WHERE THE APP STARTS
-  // INITIAL 'GET' STARTS HERE AND GETS ALL DATA FROM SERVER
-  // THEN SEND TO STORE TO UPDATE ALL PAGES
-
+  // 1. Only run once on mount
   useEffect(() => {
-    const slug = "JET365";
     const createAgenda = async () => {
       try {
-        const response = await fetch(`${store.baseUrl}agendas/${slug}`, {
+        const res = await fetch(`${store.baseUrl}agendas/${slug}`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
-        if (response.status === 201) {
-          console.log("Agenda is mad good my dude");
-        } else if (response.status === 400) {
-          console.log("Aww Man, my bad but this Agenda is already here");
-        } else {
-          console.log(
-            "Whao, that was not the response I expected!",
-            response.status
-          );
-        }
-      } catch (error) {
-        console.log(error);
+        // 201 = created, 400 = already exists
+        if (res.status === 201) console.log("Agenda created.");
+        else if (res.status === 400) console.log("Agenda already exists.");
+      } catch (err) {
+        console.error("Error creating agenda:", err);
       }
-    }
-
-const fetchContacts =async () => {
-  try {
-    const response = await fetch(`${store.baseUrl}agendas/${slug}/contacts`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-  },
-});
-if(response.ok) {
-  const data = await response.json();
-  dispatch ({type:"SET_CONTACTS", payload: data.contacts})
-} else {
-  console.log("Bro, I couldn't get your contacts son", response.status)
-}
-  }
-  catch (error) {
-        console.log(error);
-      }
-}
-
-
-    const initializeAgenda = async () => {
-      await createAgenda();
-      await fetchContacts();
     };
 
-    initializeAgenda();
-  }, [store.baseUrl, dispatch])
+    const fetchContacts = async () => {
+      try {
+        const res = await fetch(
+          `${store.baseUrl}agendas/${slug}/contacts`
+        );
+        if (!res.ok) {
+          console.error("Failed to fetch contacts:", res.status);
+          return;
+        }
+        const { contacts } = await res.json();
+        dispatch({ type: "SET_CONTACTS", payload: contacts });
+      } catch (err) {
+        console.error("Error fetching contacts:", err);
+      }
+    };
+
+    (async () => {
+      await createAgenda();
+      await fetchContacts();
+    })();
+  }, []); // ← no store or dispatch here
+
+  // 2. Delete via the nested URL
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(
+        `${store.baseUrl}agendas/${slug}/contacts/${id}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      dispatch({ type: "DELETE_CONTACT", payload: id });
+    } catch (err) {
+      console.error("Error deleting contact:", err);
+    }
+  };
+
+  // 3. Edit—push the whole contact into route state
+  const handleEdit = (contact) => {
+    navigate(`/single/${contact.id}`, { state: { contact } });
+  };
 
   return (
     <div className="container mt-5">
@@ -74,9 +75,14 @@ if(response.ok) {
         </Link>
       </div>
 
-      {store.contacts && store.contacts.length > 0 ? (
-        store.contacts.map((contact, index) => (
-          <ContactsCard key={index} contact={contact} />
+      {store.contacts?.length > 0 ? (
+        store.contacts.map((contact) => (
+          <ContactsCard
+            key={contact.id}
+            contact={contact}
+            onDelete={() => handleDelete(contact.id)}
+            onEdit={() => handleEdit(contact)}
+          />
         ))
       ) : (
         <p className="text-center">No contacts yet. Add one!</p>

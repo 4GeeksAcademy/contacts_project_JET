@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const AddContacts = () => {
-  const { dispatch } = useGlobalReducer();
+  const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
+  const slug = "JET365";  // your agenda identifier
 
-  // Local state for form inputs
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -14,36 +14,38 @@ export const AddContacts = () => {
     address: "",
   });
 
-  // Handle input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // include agenda_slug in the payload
+    const payload = { ...formData, agenda_slug: slug };
+
     try {
       const response = await fetch(
-        "https://playground.4geeks.com/contact/{contacts}",
+        `${store.baseUrl}agendas/${slug}/contacts`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         }
       );
-
-      if (!response.ok) throw new Error("Failed to save contact");
-
       const result = await response.json();
-      console.log("Success:", result);
 
-      // Optionally update global store if needed
-      // dispatch({ type: "ADD_CONTACT", payload: result });
+      if (!response.ok) {
+        // log validation errors from the server
+        console.error("Validation errors:", result);
+        throw new Error(`Failed to save contact: ${response.status}`);
+      }
 
-      navigate("/"); // Go back to home
+      // all good—update store and go home
+      dispatch({ type: "ADD_CONTACT", payload: result });
+      navigate("/");
     } catch (err) {
       console.error("Error submitting form:", err);
     }
@@ -51,18 +53,20 @@ export const AddContacts = () => {
 
   return (
     <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <div className="border border-dark p-4 rounded shadow">
+      <form onSubmit={handleSubmit} className="border border-dark p-4 rounded shadow">
         <h2 className="text-center mb-4">Add a new contact</h2>
 
+        {/** --- Form Fields --- **/}
         <div className="mb-3">
           <h6 className="mb-1 text-start">Full Name</h6>
           <input
             type="text"
-            className="form-control"
-            placeholder="Full Name"
             name="full_name"
             value={formData.full_name}
             onChange={handleChange}
+            className="form-control"
+            placeholder="Full Name"
+            required
           />
         </div>
 
@@ -70,11 +74,12 @@ export const AddContacts = () => {
           <h6 className="mb-1 text-start">Email</h6>
           <input
             type="email"
-            className="form-control"
-            placeholder="Enter email"
             name="email"
             value={formData.email}
             onChange={handleChange}
+            className="form-control"
+            placeholder="Enter email"
+            required
           />
         </div>
 
@@ -82,11 +87,12 @@ export const AddContacts = () => {
           <h6 className="mb-1 text-start">Phone</h6>
           <input
             type="text"
-            className="form-control"
-            placeholder="Enter phone"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            className="form-control"
+            placeholder="Enter phone"
+            required
           />
         </div>
 
@@ -94,26 +100,26 @@ export const AddContacts = () => {
           <h6 className="mb-1 text-start">Address</h6>
           <input
             type="text"
-            className="form-control"
-            placeholder="Enter address"
             name="address"
             value={formData.address}
             onChange={handleChange}
+            className="form-control"
+            placeholder="Enter address"
+            required
           />
         </div>
 
+        {/** --- Save Button --- **/}
         <div className="d-grid mb-3">
-          <button className="btn btn-primary" onClick={handleSubmit}>
+          <button type="submit" className="btn btn-primary">
             Save
           </button>
         </div>
 
-        <div className="mb-3">
-          <p>
-            <Link to="/"> or get back to contact</Link>
-          </p>
-        </div>
-      </div>
+        <p>
+          <Link to="/">← Back to contacts</Link>
+        </p>
+      </form>
     </div>
   );
 };
