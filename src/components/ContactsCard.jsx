@@ -1,30 +1,48 @@
 import React from "react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPhone, faEnvelope, faMapMarkerAlt, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const ContactsCard = ({ contact, onDelete, onEdit }) => {
+const ContactsCard = ({ contact, onEdit, onDelete }) => {
   return (
-    <div className="card mb-3 mx-auto" style={{ maxWidth: "540px" }}>
-      <div className="row g-0">
-        <div className="col-md-4 d-flex align-items-center justify-content-center">
-          <img
-            src={contact.imageURL || "https://via.placeholder.com/100"}
-            className="img-fluid rounded-circle"
-            alt={contact.name}
-          />
+    <div className="border border-secondary rounded p-3 d-flex align-items-center justify-content-between mb-3">
+      {/* Left side: Image and details */}
+      <div className="d-flex align-items-center">
+        <img
+          src={contact.imageURL || 'https://images.mubicdn.net/images/cast_member/98281/cache-192296-1484282960/image-w856.jpg?size=300x'}
+          alt={contact.name}
+          className="rounded-circle me-3"
+          style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+        />
+        <div>
+          <h5 className="mb-2">{contact.name}</h5>
+          <p className="mb-1">
+            <FontAwesomeIcon icon={faPhone} />{' '}
+            {contact.phone}
+          </p>
+          <p className="mb-1">
+            <FontAwesomeIcon icon={faEnvelope} />{' '}
+            {contact.email}
+          </p>
+          <p className="mb-0">
+            <FontAwesomeIcon icon={faMapMarkerAlt} />{' '}
+            {contact.address}
+          </p>
         </div>
-        <div className="col-md-8">
-          <div className="card-body">
-            <h5 className="card-title">{contact.full_name}</h5>
-            <p className="card-text">{contact.address}</p>
-            <p className="card-text">
-              <small className="text-muted">{contact.phone}</small>
-            </p>
-            <p className="card-text">{contact.email}</p>
-            <div className="d-flex justify-content-between">
-              <button className="btn btn-warning btn-sm" onClick={onEdit}>Edit</button>
-              <button className="btn btn-danger btn-sm" onClick={onDelete}>Delete</button>
-            </div>
-          </div>
-        </div>
+      </div>
+
+      {/* Right side: Edit/Delete icons */}
+      <div className="d-flex">
+        <FontAwesomeIcon
+          icon={faPencilAlt}
+          className="me-3"
+          style={{ cursor: 'pointer' }}
+          onClick={onEdit}
+        />
+        <FontAwesomeIcon
+          icon={faTrash}
+          style={{ cursor: 'pointer' }}
+          onClick={onDelete}
+        />
       </div>
     </div>
   );

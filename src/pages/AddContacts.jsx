@@ -5,17 +5,17 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 export const AddContacts = () => {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
-  const slug = "JET365";  // your agenda identifier
+  const slug = "JET365"; // your agenda identifier
 
   const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
+    name: "",
     phone: "",
+    email: "",
     address: "",
   });
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -23,23 +23,20 @@ export const AddContacts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // include agenda_slug in the payload
-    const payload = { ...formData, agenda_slug: slug };
+    // only send the contact fields
+    const payload = { ...formData };
 
     try {
-      const response = await fetch(
-        `${store.baseUrl}agendas/${slug}/contacts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${store.baseUrl}agendas/${slug}/contacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const result = await response.json();
 
       if (!response.ok) {
         // log validation errors from the server
-        console.error("Validation errors:", result);
+        console.error("Validation errors:", result.detail);
         throw new Error(`Failed to save contact: ${response.status}`);
       }
 
@@ -53,7 +50,10 @@ export const AddContacts = () => {
 
   return (
     <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <form onSubmit={handleSubmit} className="border border-dark p-4 rounded shadow">
+      <form
+        onSubmit={handleSubmit}
+        className="border border-dark p-4 rounded shadow"
+      >
         <h2 className="text-center mb-4">Add a new contact</h2>
 
         {/** --- Form Fields --- **/}
@@ -61,24 +61,11 @@ export const AddContacts = () => {
           <h6 className="mb-1 text-start">Full Name</h6>
           <input
             type="text"
-            name="full_name"
-            value={formData.full_name}
+            name="name"
+            value={formData.name}
             onChange={handleChange}
             className="form-control"
             placeholder="Full Name"
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <h6 className="mb-1 text-start">Email</h6>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="form-control"
-            placeholder="Enter email"
             required
           />
         </div>
@@ -97,6 +84,19 @@ export const AddContacts = () => {
         </div>
 
         <div className="mb-3">
+          <h6 className="mb-1 text-start">Email</h6>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-control"
+            placeholder="Enter email"
+            required
+          />
+        </div>
+
+        <div className="mb-3">
           <h6 className="mb-1 text-start">Address</h6>
           <input
             type="text"
@@ -109,7 +109,6 @@ export const AddContacts = () => {
           />
         </div>
 
-        {/** --- Save Button --- **/}
         <div className="d-grid mb-3">
           <button type="submit" className="btn btn-primary">
             Save
@@ -117,7 +116,7 @@ export const AddContacts = () => {
         </div>
 
         <p>
-          <Link to="/">← Back to contacts</Link>
+          <Link to="/">or get back to contacts</Link>
         </p>
       </form>
     </div>

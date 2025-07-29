@@ -67,11 +67,11 @@ export const Home = () => {
 
   return (
     <div className="container mt-5">
-      <h1 className="text-center mb-4">My Contacts</h1>
+      <h1 className="text-center mb-4"></h1>
 
-      <div className="text-center mb-4">
+      <div className="d-flex justify-content-end mb-4">
         <Link to="/addcontacts">
-          <button className="btn btn-primary">Add New Contact</button>
+          <button className="btn btn-success">Add New Contact</button>
         </Link>
       </div>
 
