@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import ContactsCard from "../components/ContactsCard.jsx";
@@ -8,7 +8,10 @@ export const Home = () => {
   const navigate = useNavigate();
   const slug = "JET365";
 
-  // 1. Only run once on mount
+  const [showModal, setShowModal] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
+
+  // Fetching agenda and contacts
   useEffect(() => {
     const createAgenda = async () => {
       try {
@@ -16,7 +19,6 @@ export const Home = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         });
-        // 201 = created, 400 = already exists
         if (res.status === 201) console.log("Agenda created.");
         else if (res.status === 400) console.log("Agenda already exists.");
       } catch (err) {
@@ -26,9 +28,7 @@ export const Home = () => {
 
     const fetchContacts = async () => {
       try {
-        const res = await fetch(
-          `${store.baseUrl}agendas/${slug}/contacts`
-        );
+        const res = await fetch(`${store.baseUrl}agendas/${slug}/contacts`);
         if (!res.ok) {
           console.error("Failed to fetch contacts:", res.status);
           return;
@@ -44,25 +44,32 @@ export const Home = () => {
       await createAgenda();
       await fetchContacts();
     })();
-  }, []); // ← no store or dispatch here
+  }, []);
 
-  // 2. Delete via the nested URL
-  const handleDelete = async (id) => {
+  // the prompt to confirm deletion
+  const handleDeletePrompt = (contact) => {
+    setContactToDelete(contact);
+    setShowModal(true);
+  };
+
+  // Confirming delete from modal
+  const handleConfirmDelete = async () => {
     try {
       const res = await fetch(
-        `${store.baseUrl}agendas/${slug}/contacts/${id}`,
+        `${store.baseUrl}agendas/${slug}/contacts/${contactToDelete.id}`,
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      dispatch({ type: "DELETE_CONTACT", payload: id });
+      dispatch({ type: "DELETE_CONTACT", payload: contactToDelete.id });
+      setShowModal(false);
+      setContactToDelete(null);
     } catch (err) {
       console.error("Error deleting contact:", err);
     }
   };
 
-  // 3. Edit—push the whole contact into route state
   const handleEdit = (contact) => {
-    navigate(`/single/${contact.id}`, { state: { contact } });
+    navigate(`/addcontacts`, { state: { contact } });
   };
 
   return (
@@ -80,12 +87,53 @@ export const Home = () => {
           <ContactsCard
             key={contact.id}
             contact={contact}
-            onDelete={() => handleDelete(contact.id)}
+            onDelete={() => handleDeletePrompt(contact)}
             onEdit={() => handleEdit(contact)}
           />
         ))
       ) : (
-        <p className="text-center">No contacts yet. Add one!</p>
+        <p className="text-center">No contacts yet? Add 'em!</p>
+      )}
+
+      {showModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Delete</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete <strong>{contactToDelete?.name}</strong>?</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleConfirmDelete}
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

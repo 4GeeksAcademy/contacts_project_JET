@@ -1,20 +1,30 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faEnvelope, faMapMarkerAlt, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const ContactsCard = ({ contact, onEdit, onDelete }) => {
+const ContactsCard = ({ contact, onDelete }) => {
+  const navigate = useNavigate();
+  const displayName = contact.name || contact.name || "Unnamed Contact";
+  const avatarUrl = contact.imageURL || `https://i.pravatar.cc/80?u=${contact.id}`;
+
+  // Navigate to AddContacts for editing, passing the contact in state
+  const handleEdit = () => {
+    navigate("/addcontacts", { state: { contact } });
+  };
+
   return (
     <div className="border border-secondary rounded p-3 d-flex align-items-center justify-content-between mb-3">
-      {/* Left side: Image and details */}
+
       <div className="d-flex align-items-center">
         <img
-          src={contact.imageURL || 'https://images.mubicdn.net/images/cast_member/98281/cache-192296-1484282960/image-w856.jpg?size=300x'}
-          alt={contact.name}
+          src={avatarUrl}
+          alt={displayName}
           className="rounded-circle me-3"
           style={{ width: '80px', height: '80px', objectFit: 'cover' }}
         />
         <div>
-          <h5 className="mb-2">{contact.name}</h5>
+          <h5 className="mb-2">{displayName}</h5>
           <p className="mb-1">
             <FontAwesomeIcon icon={faPhone} />{' '}
             {contact.phone}
@@ -30,19 +40,15 @@ const ContactsCard = ({ contact, onEdit, onDelete }) => {
         </div>
       </div>
 
-      {/* Right side: Edit/Delete icons */}
+
       <div className="d-flex">
         <FontAwesomeIcon
           icon={faPencilAlt}
           className="me-3"
           style={{ cursor: 'pointer' }}
-          onClick={onEdit}
+          onClick={handleEdit}
         />
-        <FontAwesomeIcon
-          icon={faTrash}
-          style={{ cursor: 'pointer' }}
-          onClick={onDelete}
-        />
+        <FontAwesomeIcon icon={faTrash} onClick={onDelete} />
       </div>
     </div>
   );

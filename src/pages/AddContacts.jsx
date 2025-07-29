@@ -1,18 +1,36 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
-export const AddContacts = () => {
+  const AddContacts = () => {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
-  const slug = "JET365"; // your agenda identifier
+  const location = useLocation();
+  const slug = "JET365";
 
+  // Determine if we're editing an existing contact
+  const contactToEdit = location.state?.contact;
+  const isEditing = Boolean(contactToEdit && contactToEdit.id);
+
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     email: "",
     address: "",
   });
+
+  // When I'm editing, fetch the latest contact data from API and populate form
+  useEffect(() => {
+    if (isEditing) {
+      setFormData({
+        name: contact.name || "",
+        phone: contact.phone || "",
+        email: contact.email || "",
+        address: contact.address || "",
+      });
+    }
+  }, [isEditing, contactToEdit]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -23,25 +41,28 @@ export const AddContacts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // only send the contact fields
-    const payload = { ...formData };
-
     try {
-      const response = await fetch(`${store.baseUrl}agendas/${slug}/contacts`, {
-        method: "POST",
+      const url = isEditing
+        ? `${store.baseUrl}agendas/${slug}/contacts/${contactToEdit.id}`
+        : `${store.baseUrl}agendas/${slug}/contacts`;
+      const method = isEditing ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
       const result = await response.json();
-
       if (!response.ok) {
-        // log validation errors from the server
-        console.error("Validation errors:", result.detail);
+        console.error("Validation errors:", result.detail || result);
         throw new Error(`Failed to save contact: ${response.status}`);
       }
 
-      // all good—update store and go home
-      dispatch({ type: "ADD_CONTACT", payload: result });
+      // Update global store
+      dispatch({
+        type: isEditing ? "EDIT_CONTACT" : "ADD_CONTACT",
+        payload: result,
+      });
       navigate("/");
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -54,9 +75,10 @@ export const AddContacts = () => {
         onSubmit={handleSubmit}
         className="border border-dark p-4 rounded shadow"
       >
-        <h2 className="text-center mb-4">Add a new contact</h2>
+        <h2 className="text-center mb-4">
+          {isEditing ? "Edit Contact" : "Add a new contact"}
+        </h2>
 
-        {/** --- Form Fields --- **/}
         <div className="mb-3">
           <h6 className="mb-1 text-start">Full Name</h6>
           <input
@@ -111,7 +133,7 @@ export const AddContacts = () => {
 
         <div className="d-grid mb-3">
           <button type="submit" className="btn btn-primary">
-            Save
+            {isEditing ? "Save Changes" : "Save"}
           </button>
         </div>
 
@@ -122,3 +144,5 @@ export const AddContacts = () => {
     </div>
   );
 };
+
+export default AddContacts;
