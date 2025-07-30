@@ -10,7 +10,7 @@ const ContactsCard = ({ contact, onDelete }) => {
 
   // Navigate to AddContacts for editing, passing the contact in state
   const handleEdit = () => {
-    navigate("/addcontacts", { state: { contact } });
+    navigate("/editcontacts/" + contact.id);
   };
 
   return (

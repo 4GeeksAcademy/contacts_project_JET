@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
   const AddContacts = () => {
   const { store, dispatch } = useGlobalReducer();
+  const {id} = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const slug = "JET365";
@@ -22,7 +23,8 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
   // When I'm editing, fetch the latest contact data from API and populate form
   useEffect(() => {
-    if (isEditing) {
+    if (id) {
+      const contact = store.contacts.find(contact => contact.id === parseInt(id))
       setFormData({
         name: contact.name || "",
         phone: contact.phone || "",
@@ -30,7 +32,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
         address: contact.address || "",
       });
     }
-  }, [isEditing, contactToEdit]);
+  }, []);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -42,10 +44,12 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = isEditing
-        ? `${store.baseUrl}agendas/${slug}/contacts/${contactToEdit.id}`
-        : `${store.baseUrl}agendas/${slug}/contacts`;
-      const method = isEditing ? "PATCH" : "POST";
+      let url = `${store.baseUrl}agendas/${slug}/contacts`;
+      let method = "POST"
+      if (id) {
+      url = `${store.baseUrl}agendas/${slug}/contacts/${id}`
+      method = "PUT"}
+      
 
       const response = await fetch(url, {
         method,
@@ -60,7 +64,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
       // Update global store
       dispatch({
-        type: isEditing ? "EDIT_CONTACT" : "ADD_CONTACT",
+        type: id ? "EDIT_CONTACT" : "ADD_CONTACT",
         payload: result,
       });
       navigate("/");
@@ -76,7 +80,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
         className="border border-dark p-4 rounded shadow"
       >
         <h2 className="text-center mb-4">
-          {isEditing ? "Edit Contact" : "Add a new contact"}
+          {id ? "Edit Contact" : "Add a new contact"}
         </h2>
 
         <div className="mb-3">
@@ -133,7 +137,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
         <div className="d-grid mb-3">
           <button type="submit" className="btn btn-primary">
-            {isEditing ? "Save Changes" : "Save"}
+            {id ? "Save Changes" : "Save"}
           </button>
         </div>
 
